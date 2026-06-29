@@ -15,6 +15,7 @@ services:
       retries: 12
 
   web:
+    image: trello_lite_prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -37,6 +38,7 @@ services:
       - "${WEB_PORT:-8080}:80"
 
   worker:
+    image: trello_lite_prod
     build:
       context: .
       dockerfile: Dockerfile
