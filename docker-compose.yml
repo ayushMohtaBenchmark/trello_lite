@@ -1,0 +1,41 @@
+# Development stack: Postgres + Rails API. Background jobs run in-process
+# (:async adapter) in development, so no separate worker is required here.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bash -c "bin/rails db:prepare && bin/rails server -b 0.0.0.0 -p 3000"
+    environment:
+      RAILS_ENV: development
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # POSTGRES_DB intentionally unset so each RAILS_ENV uses its own database
+      # (trello_lite_development / trello_lite_test) per config/database.yml.
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      # Bind-mount source for live reload. Gems live in the image (/usr/local/bundle).
+      - .:/app
+
+volumes:
+  pgdata:

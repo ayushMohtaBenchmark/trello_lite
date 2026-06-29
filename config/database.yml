@@ -1,0 +1,28 @@
+# PostgreSQL configuration for Trello-Lite.
+#
+# Development & test run on a single primary database (jobs use the :async/:test
+# adapter, cache uses memory/null) to keep local + CI setup friction-free.
+#
+# Production runs on a single PostgreSQL database: the application tables plus
+# the Solid Queue (jobs) and Solid Cache tables all share one database, created
+# and migrated by `bin/rails db:prepare`.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "postgres") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "trello_lite_development") %>
+
+test:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "trello_lite_test") %>
+
+production:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "trello_lite_production") %>

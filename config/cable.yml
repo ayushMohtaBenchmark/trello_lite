@@ -1,0 +1,10 @@
+# Action Cable is unused by this pure JSON API; the async adapter keeps the
+# framework happy without requiring Redis.
+development:
+  adapter: async
+
+test:
+  adapter: test
+
+production:
+  adapter: async

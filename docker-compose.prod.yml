@@ -1,0 +1,50 @@
+# Production-like stack: built production image (RAILS_ENV=production), a Solid
+# Queue worker for webhook delivery, and Postgres. Mirrors a real deployment.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment: &app_env
+      RAILS_ENV: production
+      # Pool must exceed Solid Queue's worker+dispatcher thread count.
+      RAILS_MAX_THREADS: 10
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: trello_lite_production
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["bundle", "exec", "rake", "solid_queue:start"]
+    environment: *app_env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata_prod:

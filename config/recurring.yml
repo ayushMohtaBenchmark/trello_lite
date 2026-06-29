@@ -1,0 +1,4 @@
+# No recurring (cron-style) Solid Queue tasks are defined yet.
+production: {}
+development: {}
+test: {}

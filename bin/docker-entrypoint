@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+# Prepare the database (create + migrate, idempotent) before starting the server.
+if [ "${1}" = "./bin/thrust" ] || [ "${1}" = "./bin/rails" ] && [ "${2}" = "server" ]; then
+  ./bin/rails db:prepare
+fi
+
+exec "${@}"
